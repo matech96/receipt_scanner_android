@@ -32,13 +32,13 @@ import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -453,7 +453,14 @@ public final class OcrCaptureActivity extends AppCompatActivity {
                 EnterPriceSelecting();
                 break;
             case PRICE_SELECTING:
-                mStringBlockProcessor.processData(getApplicationContext(), this);
+                String csv = mStringBlockProcessor.processData();
+                Intent shareIntent = ShareCompat.IntentBuilder.from(this)
+                        .setType("text/plain")
+                        .setText(csv)
+                        .getIntent();
+                if (shareIntent.resolveActivity(this.getPackageManager()) != null) {
+                    this.startActivity(shareIntent);
+                }
                 EnterPhotoTaking();
                 break;
             default:

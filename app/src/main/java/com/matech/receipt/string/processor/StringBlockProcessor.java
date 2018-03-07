@@ -1,22 +1,16 @@
 package com.matech.receipt.string.processor;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ShareCompat;
 import android.util.Log;
 import android.util.Pair;
 
 import com.google.android.gms.vision.text.Text;
 import com.google.android.gms.vision.text.TextBlock;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,13 +44,12 @@ public class StringBlockProcessor {
         priceBlocks.add(block);
     }
 
-    public void processData(Context applicationContext, Activity ocrCaptureActivity) {
+    public String processData() {
         ArrayList<Pair<Text, Text>> productesPrices = pairProductAndPrice();
 
-        int n_lines = productesPrices.size();
         StringBuilder result = new StringBuilder();
-        Pattern idPattern = Pattern.compile("^\\d{4,}\\s*");
-        Pattern pricePattern = Pattern.compile("(\\d+)[,.]?(\\d*)");
+        Pattern idPattern = Pattern.compile("^[\\w\\d]*\\s*");
+        Pattern pricePattern = Pattern.compile("([\\d\\s]+)[,.]?([\\d\\s]*)");
         for (Pair<Text, Text> productePrice : productesPrices) {
             String name = productePrice.first.getValue();
             Matcher idMatcher = idPattern.matcher(name);
@@ -64,26 +57,19 @@ public class StringBlockProcessor {
             String price = productePrice.second.getValue();
             Matcher priceMatcher = pricePattern.matcher(price);
             if (priceMatcher.find()) {
-                String formated_price = priceMatcher.group(1) + "." + priceMatcher.group(2);
+                String formated_price = priceMatcher.group(1);
+                String fractionalPart = priceMatcher.group(2);
+                if (fractionalPart.length() != 0) {
+                    formated_price += "." + fractionalPart;
+                }
+                formated_price = formated_price.replaceAll("\\s+", "");
                 result.append(name + ";" + formated_price + "\n");
             } else {
                 Log.d(TAG, "No match :(");
             }
         }
-        Intent shareIntent = ShareCompat.IntentBuilder.from(ocrCaptureActivity)
-                .setType("text/plain")
-                .setText(result.toString())
-                .getIntent();
-        if (shareIntent.resolveActivity(ocrCaptureActivity.getPackageManager()) != null) {
-            ocrCaptureActivity.startActivity(shareIntent);
-        }
         clear();
-//        for(TextBlock block : productBlocks){
-//            Point[] ps = block.getCornerPoints();
-//            for(Point p : ps) {
-//                Log.d(TAG, p.toString());
-//            }
-//        }
+        return result.toString();
     }
 
     private ArrayList<Pair<Text, Text>> pairProductAndPrice() {
