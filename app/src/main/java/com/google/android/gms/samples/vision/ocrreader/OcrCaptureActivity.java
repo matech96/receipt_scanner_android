@@ -47,12 +47,16 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.samples.vision.ocrreader.ui.camera.CameraSource;
 import com.google.android.gms.samples.vision.ocrreader.ui.camera.CameraSourcePreview;
 import com.google.android.gms.samples.vision.ocrreader.ui.camera.GraphicOverlay;
+import com.google.android.gms.vision.text.Text;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 import com.matech.receipt.string.processor.StringBlockProcessor;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Activity for the Ocr Detecting app.  This app detects text and displays the value with the
@@ -71,7 +75,6 @@ public final class OcrCaptureActivity extends AppCompatActivity {
     // Constants used to pass extra data in the intent
     public static final String AutoFocus = "AutoFocus";
     public static final String UseFlash = "UseFlash";
-    public static final String TextBlockObject = "String";
 
     private CameraSource mCameraSource;
     private CameraSourcePreview mPreview;
@@ -88,6 +91,8 @@ public final class OcrCaptureActivity extends AppCompatActivity {
     private TextToSpeech tts;
 
     private StringBlockProcessor mStringBlockProcessor = new StringBlockProcessor();
+
+    private String receiptDate;
 
     /**
      * Initializes the UI and creates the detector pipeline.
@@ -362,20 +367,6 @@ public final class OcrCaptureActivity extends AppCompatActivity {
             }
             graphic.setColor(blockColor);
             mGraphicOverlay.invalidate();
-//            if (block != null && block.getValue() != null) {
-//                Snackbar.make(mGraphicOverlay, Integer.toString(mStringBlockProcessor.size()),
-//                        Snackbar.LENGTH_LONG)
-//                        .show();
-//                Log.d(TAG, "block data is being spoken! " + block.getValue());
-//                // TODO: Speak the string.
-//                // tts.speak(block.getValue(), TextToSpeech.QUEUE_ADD, null, "DEFAULT");
-//            } else {
-//                Log.d(TAG, "block data is null");
-//            }
-        } else {
-//            Snackbar.make(mGraphicOverlay, "Processing data",
-//                    Snackbar.LENGTH_LONG)
-//                    .show();
         }
         return block != null;
     }
@@ -447,6 +438,15 @@ public final class OcrCaptureActivity extends AppCompatActivity {
     public void NextOnClick(View v) {
         switch (mStatus) {
             case PHOTO_TAKING:
+                Pattern datePattern = Pattern.compile("(\\d{4})[.,]{1,2}(\\d{2})[.,]{1,2}(\\d{2})");
+                for (OcrGraphic g : mGraphicOverlay.getAllGraphics()){
+                    Log.d("DateDetector", "Examination: " + g.getTextBlock().getValue());
+                    Matcher dateMatcher = datePattern.matcher(g.getTextBlock().getValue());
+                    if (dateMatcher.find()) {
+                        receiptDate = dateMatcher.group(1) + "." + dateMatcher.group(2) + "." + dateMatcher.group(3);
+                        Log.d("DateDetector", "Found: " + receiptDate);
+                    }
+                }
                 EnterProductSelecting();
                 break;
             case PRODUCKT_SELECTING:
@@ -454,6 +454,7 @@ public final class OcrCaptureActivity extends AppCompatActivity {
                 break;
             case PRICE_SELECTING:
                 String csv = mStringBlockProcessor.processData();
+                csv += receiptDate + "\n";
                 Intent shareIntent = ShareCompat.IntentBuilder.from(this)
                         .setType("text/plain")
                         .setText(csv)
@@ -484,7 +485,6 @@ public final class OcrCaptureActivity extends AppCompatActivity {
     }
 
     private void EnterPhotoTaking() {
-//        StartCamera();
         mBackButton.setVisibility(View.GONE);
         mNextButton.setText(R.string.capture);
         mStatus = CaptureStatus.PHOTO_TAKING;

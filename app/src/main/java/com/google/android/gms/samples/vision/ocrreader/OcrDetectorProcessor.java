@@ -42,9 +42,9 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
         SparseArray<TextBlock> items = detections.getDetectedItems();
         for (int i = 0; i < items.size(); ++i) {
             TextBlock item = items.valueAt(i);
-            if (item != null && item.getValue() != null) {
-                Log.d("Processor", "Text detected! " + item.getValue());
-            }
+//            if (item != null && item.getValue() != null) {
+//                Log.d("Processor", "Text detected! " + item.getValue());
+//            }
             OcrGraphic graphic = new OcrGraphic(mGraphicOverlay, item);
             mGraphicOverlay.add(graphic);
         }
