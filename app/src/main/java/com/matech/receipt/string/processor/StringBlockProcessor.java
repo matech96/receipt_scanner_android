@@ -48,7 +48,7 @@ public class StringBlockProcessor {
         ArrayList<Pair<Text, Text>> productesPrices = pairProductAndPrice();
 
         StringBuilder result = new StringBuilder();
-        Pattern idPattern = Pattern.compile("^[\\w\\d]*\\s*");
+        Pattern idPattern = Pattern.compile("^\\w*\\d+\\w*\\s*");
         Pattern pricePattern = Pattern.compile("([\\d\\s]+)[,.]?([\\d\\s]*)");
         for (Pair<Text, Text> productePrice : productesPrices) {
             String name = productePrice.first.getValue();
